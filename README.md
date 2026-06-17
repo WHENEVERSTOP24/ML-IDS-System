@@ -1,3 +1,4 @@
+# ML-IDS System
 Machine Learning Intrusion Detection System (ML-IDS) Plan
 This project implements a complete Machine Learning Intrusion Detection System (ML-IDS) using Python and the NSL-KDD dataset. The goal is to build a robust, reproducible, and modular pipeline that downloads the dataset, preprocesses it, trains classification models (for both binary and multi-class intrusion detection), evaluates their performance, and saves the trained models for inference.
 
