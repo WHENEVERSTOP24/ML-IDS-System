@@ -1,107 +1,120 @@
-# ML-IDS System
-Machine Learning Intrusion Detection System (ML-IDS) Plan
-This project implements a complete Machine Learning Intrusion Detection System (ML-IDS) using Python and the NSL-KDD dataset. The goal is to build a robust, reproducible, and modular pipeline that downloads the dataset, preprocesses it, trains classification models (for both binary and multi-class intrusion detection), evaluates their performance, and saves the trained models for inference.
+# Machine Learning Intrusion Detection System (ML-IDS)
 
-We will set up the project under the local path: C:\Users\dell\.gemini\antigravity\scratch\ml_ids. We recommend setting this directory as the active workspace once created.
+This repository contains a modular, production-ready Machine Learning Intrusion Detection System (ML-IDS) built in Python using the **NSL-KDD dataset**. 
 
-Directory Structure
-text
+It implements both **Binary Classification** (predicting whether network traffic is `Normal` or an `Anomaly`) and **Multiclass Classification** (predicting the specific class of intrusion: `Normal`, `DoS`, `Probe`, `R2L`, `U2R`).
 
+---
+
+## Project Directory Structure
+
+```text
 ml_ids/
-├── data/                  # Raw and processed dataset files
-├── models/                # Saved trained model files (.joblib)
-├── notebooks/             # Jupyter notebooks for EDA and experimentation
+├── data/                  # Raw and preprocessed dataset files
+│   ├── KDDTrain+.txt      # Raw training data
+│   ├── KDDTest+.txt       # Raw testing data
+│   ├── train_processed.csv # Scaled and encoded training features
+│   └── test_processed.csv  # Scaled and encoded testing features
+├── models/                # Serialized model & pipeline files (.joblib)
+│   ├── preprocessor.joblib # Fitted ColumnTransformer (scaling & encoding)
+│   ├── binary_dt.joblib    # Trained Binary Decision Tree
+│   ├── binary_rf.joblib    # Trained Binary Random Forest (Classifier)
+│   ├── multiclass_dt.joblib # Trained Multiclass Decision Tree
+│   ├── multiclass_rf.joblib # Trained Multiclass Random Forest (Classifier)
+│   ├── bin_dt_cm.png       # Confusion matrix plot for Binary Decision Tree
+│   ├── bin_rf_cm.png       # Confusion matrix plot for Binary Random Forest
+│   ├── multi_dt_cm.png     # Confusion matrix for Multiclass Decision Tree
+│   └── multi_rf_cm.png     # Confusion matrix for Multiclass Random Forest
+├── notebooks/             # Jupyter Notebooks for EDA and demonstration
 │   ├── 01_eda.ipynb       # Exploratory Data Analysis
-│   └── 02_model_training.ipynb  # Interactive training & evaluation
-├── src/                   # Python source code package
-│   ├── __init__.py
-│   ├── config.py          # Configuration parameters, paths, and feature names
-│   ├── data_loader.py     # Script/module to download the NSL-KDD dataset
-│   ├── preprocessor.py    # Pipeline for scaling, one-hot encoding, and label mapping
+│   └── 02_model_training.ipynb # Interactive training & evaluation demo
+├── src/                   # Source code package
+│   ├── __init__.py        # Package initializer
+│   ├── config.py          # Column definitions, mappings, and local paths
+│   ├── data_loader.py     # Downloads and parses raw files, drops difficulty column
+│   ├── preprocessor.py    # Target mapping, scaling, encoding, and alignment
 │   ├── trainer.py         # Model training script
-│   ├── evaluator.py       # Metrics calculation & visualization
-│   └── predict.py         # Inference script for classifying new network samples
+│   ├── evaluator.py       # Metrics report and confusion matrix plotting
+│   └── predict.py         # Inference pipeline for predicting new network records
 ├── requirements.txt       # Project dependencies
-├── main.py                # Command-Line Interface to run the pipeline
-└── README.md              # Project documentation and guide
-Proposed Changes
-Configuration
-[NEW] 
-config.py
-Stores paths, column names, URL locations for dataset downloads, mapping definitions (individual attacks to DoS, Probe, R2L, U2R), scaling configurations, and hyperparameter dictionaries.
+└── main.py                # Pipeline orchestrator CLI
+```
 
-Data Loader
-[NEW] 
-data_loader.py
-Downloads the raw NSL-KDD dataset from public repositories (specifically KDDTrain+.txt and KDDTest+.txt from standard mirrors like Defcom17 or WUSTL) and stores them in the data/ folder. It will use the requests library and show download progress.
+---
 
-Preprocessing
-[NEW] 
-preprocessor.py
-Handles data transformations:
+## Installation & Setup
 
-Columns assignment (43 features/attributes from NSL-KDD)
-Binary labels mapping (normal vs attack)
-Multi-class labels mapping (normal, dos, probe, r2l, u2r)
-Dropping irrelevant columns (like the difficulty_level column)
-Standardizing/Scaling numeric columns using StandardScaler
-One-hot encoding of categorical variables (protocol_type, service, flag) with structural alignment between train and test sets
-Saving preprocessing artifacts (scikit-learn pipeline/transformers) using joblib so they can be reused during inference.
-Model Training
-[NEW] 
-trainer.py
-Implements:
+1. **Verify Python Installation**: Ensure you have Python 3.8+ installed.
+2. **Install Dependencies**: Run the following command in your terminal:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Training of multiple models (e.g., Random Forest, Decision Tree, and Logistic Regression / XGBoost equivalent)
-Support for both Binary Classification (Intrusion vs. Normal) and Multi-Class Classification (5 classes)
-Hyperparameter tuning configuration
-Saving trained models to the models/ directory using joblib.
-Model Evaluation
-[NEW] 
-evaluator.py
-Generates classification reports, accuracy, precision, recall, F1-score, confusion matrix plots, and ROC/AUC scores for both training and test datasets. Saves confusion matrices and ROC charts as PNGs in the models/ or a separate reports/ directory.
+---
 
-Inference / Prediction
-[NEW] 
-predict.py
-Provides a function/CLI interface to predict the class (binary/multi-class) of a single input record or a new batch of unlabelled traffic data, using saved preprocessor and model artifacts.
+## Running the Pipeline
 
-Notebooks
-[NEW] 
-01_eda.ipynb
-Jupyter notebook demonstrating dataset loading, feature distributions, class imbalance, and correlation analysis.
+You can run each step of the pipeline individually or execute the entire pipeline end-to-end using the command line orchestrator `main.py`.
 
-[NEW] 
-02_model_training.ipynb
-Jupyter notebook showing step-by-step model training, comparison of multiple algorithms, and visualization of the evaluation results.
+### 1. Download the Dataset
+Downloads `KDDTrain+.txt` and `KDDTest+.txt` from verified mirrors:
+```bash
+python main.py download
+```
 
-Orchestration & Dependencies
-[NEW] 
-requirements.txt
-Specifies dependencies: pandas, numpy, scikit-learn, matplotlib, seaborn, joblib, requests, jupyter, ipykernel.
+### 2. Preprocess features
+Runs label mapping, scales numerical features using `StandardScaler`, encodes categorical variables (`protocol_type`, `service`, `flag`) using `OneHotEncoder`, and aligns column structure between train and test sets. It saves preprocessed CSVs and the pipeline object `models/preprocessor.joblib`:
+```bash
+python main.py preprocess
+```
 
-[NEW] 
-main.py
-Provides a CLI tool with commands:
+### 3. Train the Models
+Fits Decision Tree and Random Forest classifiers on the processed training set and saves the serialized models into `models/`:
+```bash
+python main.py train
+```
 
-download: Downloads dataset files.
-preprocess: Runs preprocessor pipeline and saves transformers.
-train: Trains and saves binary/multi-class models.
-evaluate: Evaluates trained models on the test set and prints/saves reports.
-run-all: Performs all steps in sequence.
-[NEW] 
-README.md
-Detailed setup instructions, package requirements, usage commands, and explanation of model architecture.
+### 4. Evaluate the Models
+Evaluates trained models on the test set, prints classification reports, and saves the confusion matrix plots in `models/`:
+```bash
+python main.py evaluate
+```
 
-Verification Plan
-Automated Verification
-We will run the complete pipeline using:
+### 5. Run the Entire Pipeline from Scratch
+Executes all the above steps in sequence:
+```bash
+python main.py run-all
+```
 
-python main.py download to verify dataset downloading and integrity.
-python main.py preprocess to verify correct data cleaning, mapping, and column alignment.
-python main.py train to verify error-free model training and serialization.
-python main.py evaluate to verify metric computation and visualization generation.
-Create a test script to check the predict.py module on a mock input record.
-Manual Verification
-We will verify that files are generated in data/ and models/ folders.
-We will review classification scores to ensure the models achieve standard performance metrics on NSL-KDD (typically >95% accuracy for binary, >75% for multi-class).
+---
+
+## Inference (Prediction on New Traffic Records)
+
+To verify the inference pipeline or predict on custom records, use `src/predict.py`.
+
+### Run Prediction on Mock Samples
+Runs prediction on hardcoded Normal and DoS Neptune mock packets:
+```bash
+python -m src.predict
+```
+
+### Run Prediction on Custom CSV Files
+To run prediction on a batch of unlabelled traffic records, pass a CSV containing the 41 feature columns (matching the feature columns of NSL-KDD):
+```bash
+python -m src.predict --file path/to/your/custom_traffic_records.csv
+```
+
+---
+
+## Model Pipeline Details
+
+- **Scaling**: Robust standardization is performed using `StandardScaler` on numerical columns (e.g. `duration`, `src_bytes`, `dst_bytes`, etc.).
+- **One-Hot Encoding**: Handled using `OneHotEncoder(handle_unknown='ignore', sparse_output=False)` to prevent mismatching feature vectors during inference when unseen categories appear.
+- **Label Mappings**:
+  - **Binary**: `normal` class -> `0` (Normal), any other attack name -> `1` (Anomaly).
+  - **Multiclass**: Grouped into 5 classes:
+    - `Normal` -> `0`
+    - `DoS` (Denial of Service) -> `1`
+    - `Probe` (Scanning/Probing) -> `2`
+    - `R2L` (Remote to Local) -> `3`
+    - `U2R` (User to Root) -> `4`
