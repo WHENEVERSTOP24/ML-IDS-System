@@ -1,120 +1,188 @@
-# Machine Learning Intrusion Detection System (ML-IDS)
+# 🛡️ ML-IDS: Machine Learning Intrusion Detection System
 
-This repository contains a modular, production-ready Machine Learning Intrusion Detection System (ML-IDS) built in Python using the **NSL-KDD dataset**. 
+## Overview
 
-It implements both **Binary Classification** (predicting whether network traffic is `Normal` or an `Anomaly`) and **Multiclass Classification** (predicting the specific class of intrusion: `Normal`, `DoS`, `Probe`, `R2L`, `U2R`).
+ML-IDS is a machine learning-based Intrusion Detection System (IDS) built using the NSL-KDD dataset to classify network traffic as either **Normal** or **Malicious**. The project explores multiple machine learning algorithms and compares their effectiveness in detecting cyber attacks.
+
+This project was developed as a hands-on cybersecurity and machine learning portfolio project to understand the complete IDS development lifecycle, including data preprocessing, feature engineering, model training, and evaluation.
 
 ---
 
-## Project Directory Structure
+## Features
+
+* Binary classification of network traffic:
+
+  * Normal Traffic
+  * Attack Traffic
+* Data preprocessing and feature engineering
+* One-hot encoding of categorical network features
+* Class balancing using SMOTE
+* Comparative analysis of multiple ML algorithms
+* Model evaluation using Accuracy, Precision, Recall, and F1-Score
+* Trained model serialization for future deployment
+
+---
+
+## Dataset
+
+This project uses the **NSL-KDD** dataset.
+
+The dataset is an improved version of the KDD Cup 1999 dataset and addresses issues such as redundant records.
+
+Download the dataset from:
+
+https://www.unb.ca/cic/datasets/nsl.html
+
+Required files:
+
+* `KDDTrain+.txt`
+* `KDDTest+.txt`
+
+Place these files inside the `data/` directory before running the project.
+
+---
+
+## Project Structure
+
+ML-IDS/
+├── data/
+│   └── README.md
+├── models/
+│   └── xgboost_ids.pkl
+├── notebooks/
+│   └── ML_IDS.ipynb
+├── reports/
+├── src/
+├── main.py
+├── requirements.txt
+└── README.md
+
+---
+
+## Technologies Used
+
+* Python
+* Pandas
+* NumPy
+* Matplotlib
+* Scikit-learn
+* Imbalanced-learn (SMOTE)
+* XGBoost
+* Jupyter Notebook
+* Joblib
+
+---
+
+## Machine Learning Pipeline
+
+1. Load NSL-KDD training and testing datasets.
+2. Convert multiclass attack labels into binary labels.
+3. Encode categorical features using one-hot encoding.
+4. Handle class imbalance using SMOTE.
+5. Train and evaluate multiple machine learning models.
+6. Compare performance using standard evaluation metrics.
+7. Save the best-performing model.
+
+---
+
+## Models Evaluated
+
+| Model                 | Accuracy   |
+| --------------------- | ---------- |
+| Random Forest + SMOTE | 77.16%     |
+| Random Forest         | 76.77%     |
+| SVM + StandardScaler  | 78.69%     |
+| XGBoost               | **79.35%** |
+
+### Best Model: XGBoost
+
+XGBoost achieved the highest overall performance:
+
+* Accuracy: 79.35%
+* Attack Precision: 97%
+* Attack Recall: 66%
+* Attack F1-Score: 78%
+
+---
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+cd YOUR_REPOSITORY
+```
+
+Create a virtual environment:
+
+```bash
+python -m venv venv
+```
+
+Activate the environment:
+
+### Windows
+
+```bash
+venv\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Running the Project
+
+Launch Jupyter Notebook:
+
+```bash
+jupyter notebook
+```
+
+Open:
 
 ```text
-ml_ids/
-├── data/                  # Raw and preprocessed dataset files
-│   ├── KDDTrain+.txt      # Raw training data
-│   ├── KDDTest+.txt       # Raw testing data
-│   ├── train_processed.csv # Scaled and encoded training features
-│   └── test_processed.csv  # Scaled and encoded testing features
-├── models/                # Serialized model & pipeline files (.joblib)
-│   ├── preprocessor.joblib # Fitted ColumnTransformer (scaling & encoding)
-│   ├── binary_dt.joblib    # Trained Binary Decision Tree
-│   ├── binary_rf.joblib    # Trained Binary Random Forest (Classifier)
-│   ├── multiclass_dt.joblib # Trained Multiclass Decision Tree
-│   ├── multiclass_rf.joblib # Trained Multiclass Random Forest (Classifier)
-│   ├── bin_dt_cm.png       # Confusion matrix plot for Binary Decision Tree
-│   ├── bin_rf_cm.png       # Confusion matrix plot for Binary Random Forest
-│   ├── multi_dt_cm.png     # Confusion matrix for Multiclass Decision Tree
-│   └── multi_rf_cm.png     # Confusion matrix for Multiclass Random Forest
-├── notebooks/             # Jupyter Notebooks for EDA and demonstration
-│   ├── 01_eda.ipynb       # Exploratory Data Analysis
-│   └── 02_model_training.ipynb # Interactive training & evaluation demo
-├── src/                   # Source code package
-│   ├── __init__.py        # Package initializer
-│   ├── config.py          # Column definitions, mappings, and local paths
-│   ├── data_loader.py     # Downloads and parses raw files, drops difficulty column
-│   ├── preprocessor.py    # Target mapping, scaling, encoding, and alignment
-│   ├── trainer.py         # Model training script
-│   ├── evaluator.py       # Metrics report and confusion matrix plotting
-│   └── predict.py         # Inference pipeline for predicting new network records
-├── requirements.txt       # Project dependencies
-└── main.py                # Pipeline orchestrator CLI
+notebooks/ML_IDS.ipynb
 ```
+
+Run the notebook cells sequentially to reproduce the experiments.
 
 ---
 
-## Installation & Setup
+## Future Improvements
 
-1. **Verify Python Installation**: Ensure you have Python 3.8+ installed.
-2. **Install Dependencies**: Run the following command in your terminal:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
----
-
-## Running the Pipeline
-
-You can run each step of the pipeline individually or execute the entire pipeline end-to-end using the command line orchestrator `main.py`.
-
-### 1. Download the Dataset
-Downloads `KDDTrain+.txt` and `KDDTest+.txt` from verified mirrors:
-```bash
-python main.py download
-```
-
-### 2. Preprocess features
-Runs label mapping, scales numerical features using `StandardScaler`, encodes categorical variables (`protocol_type`, `service`, `flag`) using `OneHotEncoder`, and aligns column structure between train and test sets. It saves preprocessed CSVs and the pipeline object `models/preprocessor.joblib`:
-```bash
-python main.py preprocess
-```
-
-### 3. Train the Models
-Fits Decision Tree and Random Forest classifiers on the processed training set and saves the serialized models into `models/`:
-```bash
-python main.py train
-```
-
-### 4. Evaluate the Models
-Evaluates trained models on the test set, prints classification reports, and saves the confusion matrix plots in `models/`:
-```bash
-python main.py evaluate
-```
-
-### 5. Run the Entire Pipeline from Scratch
-Executes all the above steps in sequence:
-```bash
-python main.py run-all
-```
+* Multi-class attack classification
+* Hyperparameter optimization
+* Feature selection techniques
+* Real-time packet capture integration
+* Streamlit dashboard for interactive predictions
+* Deployment as a web application
 
 ---
 
-## Inference (Prediction on New Traffic Records)
+## Learning Outcomes
 
-To verify the inference pipeline or predict on custom records, use `src/predict.py`.
+Through this project, I gained practical experience in:
 
-### Run Prediction on Mock Samples
-Runs prediction on hardcoded Normal and DoS Neptune mock packets:
-```bash
-python -m src.predict
-```
-
-### Run Prediction on Custom CSV Files
-To run prediction on a batch of unlabelled traffic records, pass a CSV containing the 41 feature columns (matching the feature columns of NSL-KDD):
-```bash
-python -m src.predict --file path/to/your/custom_traffic_records.csv
-```
+* Cybersecurity dataset analysis
+* Intrusion Detection Systems
+* Machine Learning model development
+* Feature engineering
+* Model evaluation and comparison
+* Debugging and optimizing ML pipelines
+* End-to-end project development using Python
 
 ---
 
-## Model Pipeline Details
+## Author
 
-- **Scaling**: Robust standardization is performed using `StandardScaler` on numerical columns (e.g. `duration`, `src_bytes`, `dst_bytes`, etc.).
-- **One-Hot Encoding**: Handled using `OneHotEncoder(handle_unknown='ignore', sparse_output=False)` to prevent mismatching feature vectors during inference when unseen categories appear.
-- **Label Mappings**:
-  - **Binary**: `normal` class -> `0` (Normal), any other attack name -> `1` (Anomaly).
-  - **Multiclass**: Grouped into 5 classes:
-    - `Normal` -> `0`
-    - `DoS` (Denial of Service) -> `1`
-    - `Probe` (Scanning/Probing) -> `2`
-    - `R2L` (Remote to Local) -> `3`
-    - `U2R` (User to Root) -> `4`
+**Anubhav**
+
+Cybersecurity Student | Ethical Hacking Enthusiast | Machine Learning Learner
+
+Feel free to connect and provide feedback on this project.
